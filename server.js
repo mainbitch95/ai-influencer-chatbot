@@ -43,5 +43,5 @@ console.log("✅ AI Response:", response.choices[0]?.message?.content || "❌ No
 });
 
 // Start the server
-const PORT = process.env.PORT || 5070;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
