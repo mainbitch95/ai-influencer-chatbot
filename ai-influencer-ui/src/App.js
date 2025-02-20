@@ -11,7 +11,7 @@ function App() {
     setLoading(true);
     
     try {
-      const res = await axios.post("https://ai-influencer-chatbot.onrender.com:10000/chat", { message });
+      const res = await axios.post("https://ai-influencer-chatbot.onrender.com/chat", { message });
       setResponse(res.data.reply); // Set AI response
     } catch (error) {
       console.error("❌ Error sending message:", error);
