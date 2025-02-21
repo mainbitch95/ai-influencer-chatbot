@@ -11,15 +11,17 @@ function App() {
     setLoading(true);
     
     try {
-      const res = await axios.post("https://ai-influencer-chatbot.onrender.com/chat", { message });
-      setResponse(res.data.reply); // Set AI response
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
-      setResponse("❌ Failed to get a response. Ensure the backend is running.");
-    }
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5070";
 
-    setLoading(false);
-  };
+      const handleSendMessage = async (message) => {
+          try {
+              const res = await axios.post(`${BACKEND_URL}/chat`, { message });
+              setMessages([...messages, { text: res.data.response, sender: "AI" }]);
+          } catch (error) {
+              console.error("Error sending message:", error);
+              setMessages([...messages, { text: "❌ Failed to get a response. Ensure the backend is running.", sender: "AI" }]);
+          }
+      };      
 
   return (
     <div style={{ maxWidth: "500px", margin: "auto", padding: "20px", textAlign: "center" }}>
