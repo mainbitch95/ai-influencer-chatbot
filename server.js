@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 
 // Initialize Express app
 const app = express();
@@ -19,11 +19,9 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 // OpenAI Configuration
-const openai = new OpenAIApi(
-  new Configuration({
+const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-  })
-);
+});
 
 // Handle chat request
 app.post("/chat", async (req, res) => {
@@ -39,12 +37,12 @@ app.post("/chat", async (req, res) => {
     let aiResponse = response.data.choices[0].message.content || "❌ No response received.";
 
     // Format AI response to ensure better readability
-    const formattedResponse = aiResponse
-      .replace(/(\d+\.)\s?/g, "\n\n$1 ") // Ensures each numbered point starts on a new line
-      .trim();
-
-    console.log("✅ AI Response (Formatted):", formattedResponse);
-    res.json({ response: formattedResponse });
+    const formattedResponse = response.data.choices[0].message.content
+    .replace(/(\d+\.)\s?/g, "<br/><br/>$1 ") // Adds HTML line breaks before each number
+    .trim();  
+  
+  console.log("✅ AI Response (Formatted):", formattedResponse);
+  res.json({ response: formattedResponse });  
 
   } catch (error) {
     console.error("❌ Error generating response:", error);
