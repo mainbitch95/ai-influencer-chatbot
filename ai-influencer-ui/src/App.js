@@ -1,141 +1,115 @@
 import React, { useState, useEffect, useRef } from "react";
-import ReactGA from "react-ga4";
 import axios from "axios";
 import styled, { createGlobalStyle } from "styled-components";
 
-// ✅ Google Analytics Setup
-const TRACKING_ID = "G-GCEKZZL7Y3"; 
-ReactGA.initialize(TRACKING_ID);
-
+// Global Styles
 const GlobalStyle = createGlobalStyle`
   body {
-    font-family: Arial, sans-serif;
-    background-color: ${(props) => (props.darkMode ? "#121212" : "#f9f9f9")};
-    color: ${(props) => (props.darkMode ? "#ffffff" : "#000000")};
-    transition: 0.3s;
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
   }
 `;
 
 const Container = styled.div`
-  max-width: 600px;
-  margin: auto;
+  width: 400px;
+  background: white;
   padding: 20px;
-  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 `;
 
 const ChatBox = styled.div`
-  border: 1px solid #ddd;
-  padding: 10px;
-  min-height: 300px;
   max-height: 400px;
   overflow-y: auto;
-  background: ${(props) => (props.darkMode ? "#1e1e1e" : "#ffffff")};
-  border-radius: 10px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
 `;
 
 const Message = styled.div`
-  padding: 8px;
-  border-radius: 8px;
-  margin: 5px 0;
-  max-width: 75%;
-  text-align: ${(props) => (props.sender === "User" ? "right" : "left")};
-  align-self: ${(props) => (props.sender === "User" ? "flex-end" : "flex-start")};
-  background-color: ${(props) =>
-    props.sender === "User" ? "#dcf8c6" : "#f1f0f0"};
-  color: ${(props) => (props.sender === "User" ? "#000" : "#000")};
+  background: ${(props) => (props.sender === "AI" ? "#e0f7fa" : "#dcf8c6")};
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  width: fit-content;
+  max-width: 80%;
+  align-self: ${(props) => (props.sender === "AI" ? "flex-start" : "flex-end")};
 `;
 
 const Input = styled.input`
-  width: calc(100% - 20px);
+  width: 100%;
   padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #ccc;
+  border: none;
   border-radius: 5px;
+  font-size: 16px;
+  outline: none;
+  margin-top: 10px;
 `;
 
 const Button = styled.button`
   width: 100%;
   padding: 10px;
-  margin-top: 5px;
-  background-color: #007bff;
+  background: #007bff;
   color: white;
   border: none;
-  cursor: pointer;
   border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
 
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+  &:hover {
+    background: #0056b3;
   }
 `;
 
-const ToggleButton = styled.button`
-  margin-bottom: 10px;
-  padding: 5px;
-  background-color: #ffcc00;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-`;
-
-function App() {
+const App = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    ReactGA.send("pageview");
-  }, []);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
   const sendMessage = async () => {
     if (!message.trim()) return;
+
+    setMessages((prev) => [...prev, { text: message, sender: "You" }]);
+    setMessage("");
     setLoading(true);
 
-    const userMessage = { text: message, sender: "User" };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-
     try {
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://ai-influencer-chatbot.onrender.com";
+      const BACKEND_URL = "https://ai-influencer-chatbot.onrender.com";
       const res = await axios.post(`${BACKEND_URL}/chat`, { message });
-
-      const aiMessage = { text: res.data.response, sender: "AI" };
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      
+      setMessages((prev) => [...prev, { text: res.data.response.replace(/<br\/>/g, "\n"), sender: "AI" }]);
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: "❌ Failed to get a response. Ensure the backend is running.", sender: "AI" }
-      ]);
-    } finally {
-      setLoading(false);
-      setMessage("");
+      setMessages((prev) => [...prev, { text: "❌ Failed to get a response.", sender: "AI" }]);
     }
+    
+    setLoading(false);
   };
 
   return (
     <Container>
-      <GlobalStyle darkMode={darkMode} />
+      <GlobalStyle />
       <h2>AI Influencer Chatbot</h2>
-      <ToggleButton onClick={toggleDarkMode}>
-        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-      </ToggleButton>
-      <ChatBox darkMode={darkMode}>
-      {messages.map((msg, index) => (
-  <Message key={index} sender={msg.sender}>
-    <strong>{msg.sender}:</strong>{" "}
-    <span dangerouslySetInnerHTML={{ __html: msg.text }}></span>
-  </Message>
-))}
+      <ChatBox>
+        {messages.map((msg, index) => (
+          <Message key={index} sender={msg.sender}>
+            <strong>{msg.sender}:</strong> {msg.text}
+          </Message>
+        ))}
         {loading && <Message sender="AI">AI is typing...</Message>}
         <div ref={chatEndRef} />
       </ChatBox>
@@ -150,6 +124,6 @@ function App() {
       </Button>
     </Container>
   );
-}
+};
 
 export default App;
