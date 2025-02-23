@@ -130,11 +130,12 @@ function App() {
         {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
       </ToggleButton>
       <ChatBox darkMode={darkMode}>
-        {messages.map((msg, index) => (
-          <Message key={index} sender={msg.sender}>
-            <strong>{msg.sender}:</strong> {msg.text}
-          </Message>
-        ))}
+      {messages.map((msg, index) => (
+  <Message key={index} sender={msg.sender}>
+    <strong>{msg.sender}:</strong>{" "}
+    <span dangerouslySetInnerHTML={{ __html: msg.text }}></span>
+  </Message>
+))}
         {loading && <Message sender="AI">AI is typing...</Message>}
         <div ref={chatEndRef} />
       </ChatBox>
