@@ -32,8 +32,9 @@ app.post("/chat", async (req, res) => {
     // ✅ Extract AI Response and Format Output
     let aiResponse = response.choices[0].message.content;
 
-    // 🔹 Ensure Proper Formatting for Lists
-    aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert new lines to HTML breaks
+    // Ensure proper spacing for numbered lists
+    aiResponse = aiResponse.replace(/(\d\.)/g, "<br/><br/>$1"); // Adds extra space before numbered lists
+    aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert all new lines to HTML breaks
 
     console.log("✅ AI Response:", aiResponse);
     res.json({ response: aiResponse });
