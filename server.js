@@ -1,52 +1,57 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { Configuration, OpenAIApi } = require('openai');
+// Load environment variables
+require("dotenv").config();
 
+const express = require("express");
+const cors = require("cors");
+const { Configuration, OpenAIApi } = require("openai");
+
+// Initialize Express app
 const app = express();
 app.use(express.json());
+app.use(cors());
 
-// ✅ Fix CORS to Allow Frontend Requests
-app.use(cors({
-    origin: "*", // You can change "*" to your Vercel frontend URL later for security
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"]
-}));
+console.log("✅ Server is starting...");
 
-console.log("✅ Server is starting..."); // Debugging log
+// Ensure API key is loaded
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ OPENAI_API_KEY is missing in .env file!");
+  process.exit(1);
+}
 
-const OpenAI = require('openai');
+// OpenAI Configuration
+const openai = new OpenAIApi(
+  new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+);
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // This loads your API key from .env
-});
-
-// ✅ Add a simple route to check if the server is running
-app.get("/", (req, res) => {
-    res.send("✅ AI Chatbot Server is Running!");
-});
-
-// ✅ Your existing chatbot route
+// Handle chat request
 app.post("/chat", async (req, res) => {
-    try {
-        const { message } = req.body;
-        console.log(`✅ Received request: ${message}`);
+  try {
+    const { message } = req.body;
+    console.log(`✅ Received request: ${message}`);
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-4",
-            messages: [{ role: "user", content: message }],
-        });
+    const response = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [{ role: "user", content: message }],
+    });
 
-        console.log("✅ AI Response:", response.choices[0].message.content);
-        res.json({ response: response.choices[0].message.content });
-    } catch (error) {
-        console.error("❌ Error generating response:", error);
-        res.status(500).json({ error: "Error generating response" });
-    }
+    let aiResponse = response.data.choices[0].message.content || "❌ No response received.";
+
+    // Format AI response to ensure better readability
+    const formattedResponse = aiResponse
+      .replace(/(\d+\.)\s?/g, "\n\n$1 ") // Ensures each numbered point starts on a new line
+      .trim();
+
+    console.log("✅ AI Response (Formatted):", formattedResponse);
+    res.json({ response: formattedResponse });
+
+  } catch (error) {
+    console.error("❌ Error generating response:", error);
+    res.status(500).json({ error: "Error generating response" });
+  }
 });
 
-// ✅ Fix Port Handling for Render Deployment
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Server running on port ${PORT}`);
-});
+// Start server
+const PORT = process.env.PORT || 5070;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
