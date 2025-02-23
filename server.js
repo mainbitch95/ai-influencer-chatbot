@@ -29,14 +29,14 @@ app.post("/chat", async (req, res) => {
       messages: [{ role: "user", content: message }],
     });
 
-    // ✅ Extract AI Response and Format Output
-    let aiResponse = response.choices[0].message.content;
+ // ✅ Extract AI Response and Format Output
+let aiResponse = response.choices[0].message.content;
 
-    // Ensure proper spacing for numbered lists
-    aiResponse = aiResponse.replace(/(\d\.)/g, "<br/><br/>$1"); // Adds extra space before numbered lists
-    aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert all new lines to HTML breaks
+// Ensure proper spacing for numbered lists
+aiResponse = aiResponse.replace(/(\d\.)/g, "<br/><br/>$1"); // Adds extra space before numbered lists
+aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert all new lines to HTML breaks
 
-    console.log("✅ AI Response:", aiResponse);
+console.log("✅ AI Response:", aiResponse);
     res.json({ response: aiResponse });
   } catch (error) {
     console.error("❌ Error generating response:", error);
