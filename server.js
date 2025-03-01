@@ -1,10 +1,12 @@
-// Load environment variables
+// ✅ Load Environment Variables
 require("dotenv").config();
 
+// ✅ Import Dependencies
 const express = require("express");
 const cors = require("cors");
-const OpenAI = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
 
+// ✅ Initialize Express App
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -12,39 +14,51 @@ app.use(cors());
 // ✅ Debugging Logs
 console.log("✅ Server is starting...");
 
-// ✅ Initialize OpenAI with API Key
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Ensure this key is set in your .env file
+// ✅ OpenAI API Setup
+const openai = new OpenAIApi(
+  new Configuration({
+    apiKey: process.env.OPENAI_API_KEY, // Ensure this is set correctly in .env
+  })
+);
+
+// ✅ Default Route to Check Server Status
+app.get("/", (req, res) => {
+  res.send("✅ AI Influencer Chatbot Backend is Running!");
 });
 
-// ✅ API Endpoint for Chat Requests
+// ✅ API Endpoint for AI Chat Requests
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Missing message in request body" });
+    }
+
     console.log(`✅ Received request: ${message}`);
 
-    // ✅ Generate AI Response
-    const response = await openai.chat.completions.create({
+    // ✅ Send Request to OpenAI
+    const response = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [{ role: "user", content: message }],
     });
 
- // ✅ Extract AI Response and Format Output
-let aiResponse = response.choices[0].message.content;
+   // ✅ Extract AI Response and Format Output
+let aiResponse = response.data.choices[0].message.content;
 
-// Ensure proper spacing for numbered lists
-aiResponse = aiResponse.replace(/(\d\.)/g, "<br/><br/>$1"); // Adds extra space before numbered lists
-aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert all new lines to HTML breaks
+// 🔹 Ensure numbered lists have correct spacing
+aiResponse = aiResponse.replace(/(\d\.)/g, "<br/><br/>$1");
+aiResponse = aiResponse.replace(/\n/g, "<br/>"); // Convert new lines to HTML breaks
 
 console.log("✅ AI Response:", aiResponse);
-    res.json({ response: aiResponse });
+res.json({ response: aiResponse });
   } catch (error) {
     console.error("❌ Error generating response:", error);
     res.status(500).json({ error: "Error generating response" });
   }
 });
 
-// ✅ Start Server on Port 10000
+// ✅ Set Server Port (Change if needed)
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
