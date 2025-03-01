@@ -1,10 +1,10 @@
-// ✅ Load Environment Variables
+// ✅ Load Environment Variables (Must be at the Top)
 require("dotenv").config();
 
 // ✅ Import Dependencies
 const express = require("express");
 const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai"); // ✅ Corrected OpenAI Import
 
 // ✅ Initialize Express App
 const app = express();
@@ -14,12 +14,10 @@ app.use(cors());
 // ✅ Debugging Logs
 console.log("✅ Server is starting...");
 
-// ✅ OpenAI API Setup
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.OPENAI_API_KEY, // Ensure this is set correctly in .env
-  })
-);
+// ✅ Initialize OpenAI API (Fixed Configuration Error)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // ✅ Ensure this is set in Render Environment Variables
+});
 
 // ✅ Default Route to Check Server Status
 app.get("/", (req, res) => {
