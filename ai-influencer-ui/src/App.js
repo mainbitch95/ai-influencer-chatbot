@@ -88,8 +88,8 @@ const App = () => {
     setLoading(true);
 
     try {
-      const BACKEND_URL = "https://ai-influencer-chatbot.onrender.com";
-      const res = await axios.post(`${BACKEND_URL}/chat`, { message });
+      const BACKEND_URL = || "https://ai-influencer-chatbot.onrender.com";
+      const res = await axios.post(`${BACKEND_URL}/chat`, { message });      
       
       setMessages((prev) => [...prev, { text: res.data.response.replace(/<br\/>/g, "\n"), sender: "AI" }]);
     } catch (error) {
@@ -105,11 +105,14 @@ const App = () => {
       <GlobalStyle />
       <h2>AI Influencer Chatbot</h2>
       <ChatBox>
-        {messages.map((msg, index) => (
-          <Message key={index} sender={msg.sender}>
-            <strong>{msg.sender}:</strong> {msg.text}
-          </Message>
-        ))}
+      {messages.map((msg, index) => (
+  <Message key={index} sender={msg.sender}>
+    <strong>{msg.sender}:</strong> {msg.text}
+    <span style={{ fontSize: "0.8rem", color: "#888" }}>
+      {new Date().toLocaleTimeString()}
+    </span>
+  </Message>
+))}
         {loading && <Message sender="AI">AI is typing...</Message>}
         <div ref={chatEndRef} />
       </ChatBox>
