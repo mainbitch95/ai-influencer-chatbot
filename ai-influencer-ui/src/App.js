@@ -2,78 +2,77 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import styled, { createGlobalStyle } from "styled-components";
 
-// Global Styles
+const BACKEND_URL = "https://ai-influencer-chatbot.onrender.com"; // Update with your Render backend URL
+
 const GlobalStyle = createGlobalStyle`
   body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    background-color: ${(props) => (props.darkMode ? "#121212" : "#f5f5f5")};
+    color: ${(props) => (props.darkMode ? "#fff" : "#000")};
+    font-family: Arial, sans-serif;
+    text-align: center;
   }
 `;
 
 const Container = styled.div`
-  width: 400px;
-  background: white;
+  max-width: 600px;
+  margin: 40px auto;
   padding: 20px;
+  background: ${(props) => (props.darkMode ? "#1e1e1e" : "#fff")};
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const ChatBox = styled.div`
-  max-height: 400px;
+  height: 300px;
   overflow-y: auto;
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #ddd;
+  background: ${(props) => (props.darkMode ? "#282c34" : "#fafafa")};
+  border-radius: 5px;
 `;
 
 const Message = styled.div`
-  background: ${(props) => (props.sender === "AI" ? "#e0f7fa" : "#dcf8c6")};
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  width: fit-content;
-  max-width: 80%;
-  align-self: ${(props) => (props.sender === "AI" ? "flex-start" : "flex-end")};
+  text-align: ${(props) => (props.sender === "AI" ? "left" : "right")};
+  padding: 8px;
+  margin: 5px;
+  border-radius: 5px;
+  background-color: ${(props) =>
+    props.sender === "AI" ? "#e0e0e0" : "#007bff"};
+  color: ${(props) => (props.sender === "AI" ? "#000" : "#fff")};
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 80%;
   padding: 10px;
-  border: none;
   border-radius: 5px;
-  font-size: 16px;
-  outline: none;
-  margin-top: 10px;
+  border: 1px solid #ccc;
 `;
 
 const Button = styled.button`
-  width: 100%;
   padding: 10px;
-  background: #007bff;
-  color: white;
+  margin-left: 10px;
   border: none;
+  background: #007bff;
+  color: #fff;
   border-radius: 5px;
-  font-size: 16px;
   cursor: pointer;
-  margin-top: 10px;
-
-  &:hover {
-    background: #0056b3;
-  }
 `;
 
-const App = () => {
-  const [message, setMessage] = useState("");
+const ToggleButton = styled.button`
+  margin: 10px;
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
+  background: #444;
+  color: white;
+  cursor: pointer;
+`;
+
+function App() {
   const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -82,51 +81,53 @@ const App = () => {
 
   const sendMessage = async () => {
     if (!message.trim()) return;
-
-    setMessages((prev) => [...prev, { text: message, sender: "You" }]);
-    setMessage("");
     setLoading(true);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { text: message, sender: "You", timestamp: new Date().toLocaleTimeString() }
+    ]);
 
     try {
-      const BACKEND_URL = || "https://ai-influencer-chatbot.onrender.com";
-      const res = await axios.post(`${BACKEND_URL}/chat`, { message });      
-      
-      setMessages((prev) => [...prev, { text: res.data.response.replace(/<br\/>/g, "\n"), sender: "AI" }]);
+      const res = await axios.post(`${BACKEND_URL}/chat`, { message });
+      const aiMessage = { text: res.data.response, sender: "AI", timestamp: new Date().toLocaleTimeString() };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages((prev) => [...prev, { text: "❌ Failed to get a response.", sender: "AI" }]);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: "❌ Failed to get a response. Ensure the backend is running.", sender: "AI" }
+      ]);
     }
-    
     setLoading(false);
   };
 
+  const saveChat = async () => {
+    const chatContent = messages.map(msg => `${msg.sender}: ${msg.text}`).join("\n");
+    await axios.post(`${BACKEND_URL}/save`, { content: chatContent });
+    alert("Chat saved!");
+  };
+
   return (
-    <Container>
-      <GlobalStyle />
+    <Container darkMode={darkMode}>
+      <GlobalStyle darkMode={darkMode} />
       <h2>AI Influencer Chatbot</h2>
-      <ChatBox>
-      {messages.map((msg, index) => (
-  <Message key={index} sender={msg.sender}>
-    <strong>{msg.sender}:</strong> {msg.text}
-    <span style={{ fontSize: "0.8rem", color: "#888" }}>
-      {new Date().toLocaleTimeString()}
-    </span>
-  </Message>
-))}
+      <ToggleButton onClick={() => setDarkMode(!darkMode)}>
+        {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+      </ToggleButton>
+      <ChatBox darkMode={darkMode}>
+        {messages.map((msg, index) => (
+          <Message key={index} sender={msg.sender}>
+            <strong>{msg.sender}:</strong> {msg.text} <br />
+            <small>{msg.timestamp}</small>
+          </Message>
+        ))}
         {loading && <Message sender="AI">AI is typing...</Message>}
         <div ref={chatEndRef} />
       </ChatBox>
-      <Input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type a message..."
-      />
-      <Button onClick={sendMessage} disabled={loading}>
-        {loading ? "Sending..." : "Send Message"}
-      </Button>
+      <Input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Type a message..." />
+      <Button onClick={sendMessage} disabled={loading}>{loading ? "Sending..." : "Send"}</Button>
+      <Button onClick={saveChat}>Save Chat</Button>
     </Container>
   );
-};
+}
 
 export default App;
